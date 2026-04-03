@@ -148,11 +148,32 @@ app.get('/api/feedback/approve/:token', async (req, res) => {
       return res.status(400).send('<h1>Invalid Token Action</h1>');
     }
 
-    const feedback = await Feedback.findByIdAndUpdate(decoded.id, { status: 'approved' }, { new: true });
+    const feedback = await Feedback.findById(decoded.id);
     
     if (!feedback) {
-      return res.status(404).send('<h1>Feedback not found</h1>');
+      return res.status(404).send('<div style="font-family: sans-serif; text-align: center; margin-top: 40px;"><h1 style="color: #ef4444;">❌ Feedback not found</h1></div>');
     }
+
+    if (feedback.status === 'approved') {
+      return res.send(`
+        <div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; text-align: center; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; background-color: #f0fdf4;">
+          <h1 style="color: #16a34a; margin-bottom: 20px;">ℹ️ Already Approved</h1>
+          <p style="font-size: 18px;">The feedback from <strong>${feedback.userName}</strong> was already approved previously.</p>
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">You may safely close this tab.</p>
+        </div>
+      `);
+    } else if (feedback.status === 'rejected') {
+      return res.send(`
+        <div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; text-align: center; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; background-color: #fef2f2;">
+          <h1 style="color: #ef4444; margin-bottom: 20px;">⚠️ Status Conflict</h1>
+          <p style="font-size: 18px;">You cannot approve this feedback because it was already <strong>rejected</strong>.</p>
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">You may safely close this tab.</p>
+        </div>
+      `);
+    }
+
+    feedback.status = 'approved';
+    await feedback.save();
 
     res.send(`
       <div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; text-align: center; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
@@ -177,11 +198,32 @@ app.get('/api/feedback/reject/:token', async (req, res) => {
       return res.status(400).send('<h1>Invalid Token Action</h1>');
     }
 
-    const feedback = await Feedback.findByIdAndUpdate(decoded.id, { status: 'rejected' }, { new: true });
+    const feedback = await Feedback.findById(decoded.id);
     
     if (!feedback) {
-      return res.status(404).send('<h1>Feedback not found</h1>');
+      return res.status(404).send('<div style="font-family: sans-serif; text-align: center; margin-top: 40px;"><h1 style="color: #ef4444;">❌ Feedback not found</h1></div>');
     }
+
+    if (feedback.status === 'rejected') {
+      return res.send(`
+        <div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; text-align: center; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; background-color: #fef2f2;">
+          <h1 style="color: #ef4444; margin-bottom: 20px;">ℹ️ Already Rejected</h1>
+          <p style="font-size: 18px;">The feedback from <strong>${feedback.userName}</strong> was already rejected previously.</p>
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">You may safely close this tab.</p>
+        </div>
+      `);
+    } else if (feedback.status === 'approved') {
+      return res.send(`
+        <div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; text-align: center; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; background-color: #f0fdf4;">
+          <h1 style="color: #16a34a; margin-bottom: 20px;">⚠️ Status Conflict</h1>
+          <p style="font-size: 18px;">You cannot reject this feedback because it was already <strong>approved</strong>.</p>
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">You may safely close this tab.</p>
+        </div>
+      `);
+    }
+
+    feedback.status = 'rejected';
+    await feedback.save();
 
     res.send(`
       <div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; text-align: center; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
